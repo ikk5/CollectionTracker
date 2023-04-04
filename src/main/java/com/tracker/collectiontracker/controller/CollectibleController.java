@@ -18,13 +18,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tracker.collectiontracker.mapper.CollectibleMapper;
 import com.tracker.collectiontracker.model.Collectible;
+import com.tracker.collectiontracker.model.Subcategory;
+import com.tracker.collectiontracker.repository.CategoryRepository;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
+import com.tracker.collectiontracker.repository.SubcategoryRepository;
+import com.tracker.collectiontracker.to.CollectibleTO;
 
 /**
  *
  */
-@CrossOrigin(origins = "http://localhost:8081")
+@CrossOrigin(origins = { "http://localhost:8081" })
 @RestController
 @RequestMapping("/api")
 public class CollectibleController {
@@ -32,8 +37,14 @@ public class CollectibleController {
     @Autowired
     private CollectibleRepository collectibleRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SubcategoryRepository subcategoryRepository;
+
     @GetMapping("/collectibles")
-    public ResponseEntity<List<Collectible>> getAllCollectibles(@RequestParam(required = false) String name) {
+    public ResponseEntity<List<CollectibleTO>> getAllCollectibles(@RequestParam(required = false) String name) {
         try {
             List<Collectible> collectibles;
             if (name == null) {
@@ -45,41 +56,49 @@ public class CollectibleController {
             if (collectibles.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(collectibles, HttpStatus.OK);
+            return new ResponseEntity<>(CollectibleMapper.mapEntityListToTOs(collectibles), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/collectibles/{id}")
-    public ResponseEntity<Collectible> getCollectibleById(@PathVariable("id") long id) {
+    public ResponseEntity<CollectibleTO> getCollectibleById(@PathVariable("id") long id) {
         Optional<Collectible> collectible = collectibleRepository.findById(id);
-
-        return collectible.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        if (collectible.isPresent()) {
+            CollectibleTO to = CollectibleMapper.mapEntityToTO(collectible.get());
+            return new ResponseEntity<>(to, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping("/collectibles")
-    public ResponseEntity<Collectible> createCollectible(@RequestBody Collectible collectible) {
-        try{
+    public ResponseEntity<CollectibleTO> createCollectible(@RequestBody CollectibleTO collectibleTO) {
+        try {
             // TODO: validaties
-            Collectible newCollectible = collectibleRepository.save(new Collectible(collectible));
-            return new ResponseEntity<>(newCollectible, HttpStatus.CREATED);
-        }catch (Exception e){
+            Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
+            Collectible collectible = CollectibleMapper.mapTOtoEntity(collectibleTO, subcategory);
+
+            CollectibleTO savedCollectible = CollectibleMapper.mapEntityToTO(collectibleRepository.save(collectible));
+            return new ResponseEntity<>(savedCollectible, HttpStatus.CREATED);
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/collectibles/{id}")
-    public ResponseEntity<Collectible> updateCollectible(@PathVariable("id") long id, @RequestBody Collectible collectible) {
+    public ResponseEntity<CollectibleTO> updateCollectible(@PathVariable("id") long id, @RequestBody CollectibleTO collectibleTO) {
         Optional<Collectible> collectibleData = collectibleRepository.findById(id);
+        Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
 
-        if (collectibleData.isPresent()) {
+        if (collectibleData.isPresent() && subcategory != null) {
             Collectible dbCollectible = collectibleData.get();
-            dbCollectible.setName(collectible.getName());
-            dbCollectible.setDescription(collectible.getDescription());
-            dbCollectible.setPublished(collectible.isPublished());
-            return new ResponseEntity<>(collectibleRepository.save(dbCollectible), HttpStatus.OK);
+            dbCollectible.setName(collectibleTO.getName());
+            dbCollectible.setSubcategory(subcategory);
+
+            CollectibleTO updatedCollectable = CollectibleMapper.mapEntityToTO(collectibleRepository.save(dbCollectible));
+            return new ResponseEntity<>(updatedCollectable, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -100,20 +119,6 @@ public class CollectibleController {
         try {
             collectibleRepository.deleteAll();
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/collectibles/published")
-    public ResponseEntity<List<Collectible>> findByPublished() {
-        try {
-            List<Collectible> collectibles = collectibleRepository.findByPublished(true);
-
-            if (collectibles.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(collectibles, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

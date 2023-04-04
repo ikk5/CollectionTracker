@@ -1,7 +1,5 @@
 package com.tracker.collectiontracker.model;
 
-import java.time.LocalDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,13 +20,13 @@ import lombok.ToString;
  *
  */
 @Entity
-@Table
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "category_id" }) })
 @Getter @Setter
 @ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Collectible {
+public class Subcategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,10 +35,7 @@ public class Collectible {
     @Column(nullable = false)
     private String name;
 
-    @JoinColumn(name = "subcategory_id", nullable = false)
     @ManyToOne
-    private Subcategory subcategory;
-
-    @Column(name = "date_added")
-    private final LocalDate addedDate = LocalDate.now();
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 }
