@@ -1,5 +1,6 @@
 package com.tracker.collectiontracker.mapper;
 
+import java.util.Comparator;
 import java.util.List;
 
 import com.tracker.collectiontracker.model.Category;
@@ -15,7 +16,7 @@ public class SubcategoryMapper {
     }
 
     public static List<SubcategoryTO> mapEntityListToTOs(List<Subcategory> subcategories) {
-        return subcategories.stream().map(SubcategoryMapper::mapEntityToTO).toList();
+        return subcategories.stream().map(SubcategoryMapper::mapEntityToTO).sorted(Comparator.comparing(SubcategoryTO::getSubcategory)).toList();
     }
 
     public static SubcategoryTO mapEntityToTO(Subcategory subcategory) {

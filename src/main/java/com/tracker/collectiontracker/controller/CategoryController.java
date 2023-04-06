@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,9 +84,11 @@ public class CategoryController {
 
         if (categoryData.isPresent()) {
             Category dbCategory = categoryData.get();
-            dbCategory.setName(categoryTO.getCategory());
+            dbCategory.setName(categoryTO.getName());
 
             List<Subcategory> unusedSubcategories = dbCategory.getSubcategories();
+            categoryTO.getSubcategories().removeIf(subcategoryTO -> StringUtils.isEmpty(subcategoryTO.getSubcategory()));
+            
             for (SubcategoryTO subcategoryTO : categoryTO.getSubcategories()) {
                 if (subcategoryTO.getSubcategoryId() == null) {
                     // Subcategory is new, add to Category
@@ -116,6 +120,37 @@ public class CategoryController {
             return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<CategoryTO> getCategoryById(@PathVariable("id") long id) {
+        Optional<Category> category = categoryRepository.findById(id);
+        if (category.isPresent()) {
+            CategoryTO to = CategoryMapper.mapEntityToTO(category.get());
+            return new ResponseEntity<>(to, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<HttpStatus> deleteCategory(@PathVariable("id") long id) {
+        try {
+            categoryRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/categories")
+    public ResponseEntity<HttpStatus> deleteAllCategories() {
+        try {
+            categoryRepository.deleteAll();
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -37,12 +37,12 @@ public class Category {
     @Column(unique = true, nullable = false)
     private String name;
 
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private final List<Subcategory> subcategories = new ArrayList<>();
+
     public List<Subcategory> getSubcategories() {
         return new ArrayList<>(subcategories);
     }
-
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    private final List<Subcategory> subcategories = new ArrayList<>();
 
     public void addSubcategory(Long subcategoryId, String subcategoryName) {
         if (subcategoryId == null) {
