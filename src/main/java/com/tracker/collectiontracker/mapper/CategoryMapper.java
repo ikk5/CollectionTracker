@@ -32,7 +32,7 @@ public class CategoryMapper {
                 .name(to.getName())
                 .build();
         if (to.getSubcategories() != null) {
-            to.getSubcategories().stream().filter(s -> StringUtils.isNotEmpty(s.getSubcategory()))
+            to.getSubcategories().stream().filter(s -> StringUtils.isNotBlank(s.getSubcategory()))
                     .forEach(subcategoryTO ->
                             category.addSubcategory(subcategoryTO.getSubcategoryId(), subcategoryTO.getSubcategory()));
         }

@@ -67,28 +67,38 @@ public class CategoryController {
 
     @PostMapping("/categories")
     public ResponseEntity<CategoryTO> createCategory(@RequestBody CategoryTO categoryTO) {
+        ResponseEntity<CategoryTO> response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         try {
-            // TODO: validaties
             Category category = CategoryMapper.mapTOtoEntity(categoryTO);
 
-            CategoryTO savedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(category));
-            return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+            if (isValidCategory(category)) {
+                CategoryTO savedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(category));
+                response = new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+            }
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        return response;
+    }
+
+    private boolean isValidCategory(Category category) {
+        return StringUtils.isNotBlank(category.getName());
     }
 
     @PutMapping("/categories/{id}")
     public ResponseEntity<CategoryTO> updateCategory(@PathVariable("id") long id, @RequestBody CategoryTO categoryTO) {
+        ResponseEntity<CategoryTO> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
-        if (categoryData.isPresent()) {
+        if (StringUtils.isBlank(categoryTO.getName())) {
+            response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        } else if (categoryData.isPresent()) {
             Category dbCategory = categoryData.get();
             dbCategory.setName(categoryTO.getName());
 
             List<Subcategory> unusedSubcategories = dbCategory.getSubcategories();
-            categoryTO.getSubcategories().removeIf(subcategoryTO -> StringUtils.isEmpty(subcategoryTO.getSubcategory()));
-            
+            categoryTO.getSubcategories().removeIf(subcategoryTO -> StringUtils.isBlank(subcategoryTO.getSubcategory()));
+
             for (SubcategoryTO subcategoryTO : categoryTO.getSubcategories()) {
                 if (subcategoryTO.getSubcategoryId() == null) {
                     // Subcategory is new, add to Category
@@ -117,10 +127,11 @@ public class CategoryController {
             }
 
             CategoryTO updatedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(dbCategory));
-            return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
+            response = new ResponseEntity<>(updatedCategory, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+        return response;
     }
 
     @GetMapping("/categories/{id}")

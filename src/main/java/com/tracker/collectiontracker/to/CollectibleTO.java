@@ -1,6 +1,7 @@
 package com.tracker.collectiontracker.to;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +21,8 @@ public class CollectibleTO {
     private String name;
 
     private SubcategoryTO subcategory;
+
+    private List<ImageLinkTO> images;
 
     private LocalDate addedDate;
 }

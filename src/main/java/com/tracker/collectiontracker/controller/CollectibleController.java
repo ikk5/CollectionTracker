@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tracker.collectiontracker.mapper.CollectibleMapper;
 import com.tracker.collectiontracker.model.Collectible;
 import com.tracker.collectiontracker.model.Subcategory;
-import com.tracker.collectiontracker.repository.CategoryRepository;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
 import com.tracker.collectiontracker.repository.SubcategoryRepository;
 import com.tracker.collectiontracker.to.CollectibleTO;
@@ -36,9 +36,6 @@ public class CollectibleController {
 
     @Autowired
     private CollectibleRepository collectibleRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
 
     @Autowired
     private SubcategoryRepository subcategoryRepository;
@@ -76,15 +73,21 @@ public class CollectibleController {
     @PostMapping("/collectibles")
     public ResponseEntity<CollectibleTO> createCollectible(@RequestBody CollectibleTO collectibleTO) {
         try {
-            // TODO: validaties
             Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
             Collectible collectible = CollectibleMapper.mapTOtoEntity(collectibleTO, subcategory);
-
-            CollectibleTO savedCollectible = CollectibleMapper.mapEntityToTO(collectibleRepository.save(collectible));
-            return new ResponseEntity<>(savedCollectible, HttpStatus.CREATED);
+            if (isValidCollectible(collectible)) {
+                CollectibleTO savedCollectible = CollectibleMapper.mapEntityToTO(collectibleRepository.save(collectible));
+                return new ResponseEntity<>(savedCollectible, HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+            }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private boolean isValidCollectible(Collectible collectible) {
+        return StringUtils.isNotBlank(collectible.getName()) && collectible.getSubcategory() != null;
     }
 
     @PutMapping("/collectibles/{id}")
@@ -97,8 +100,15 @@ public class CollectibleController {
             dbCollectible.setName(collectibleTO.getName());
             dbCollectible.setSubcategory(subcategory);
 
-            CollectibleTO updatedCollectable = CollectibleMapper.mapEntityToTO(collectibleRepository.save(dbCollectible));
-            return new ResponseEntity<>(updatedCollectable, HttpStatus.OK);
+            dbCollectible.clearImages();
+            collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl()));
+
+            if (isValidCollectible(dbCollectible)) {
+                CollectibleTO updatedCollectable = CollectibleMapper.mapEntityToTO(collectibleRepository.save(dbCollectible));
+                return new ResponseEntity<>(updatedCollectable, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
