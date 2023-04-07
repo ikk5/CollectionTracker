@@ -3,7 +3,6 @@ package com.tracker.collectiontracker.mapper;
 import java.util.Comparator;
 import java.util.List;
 
-import com.tracker.collectiontracker.model.Category;
 import com.tracker.collectiontracker.model.Subcategory;
 import com.tracker.collectiontracker.to.SubcategoryTO;
 
@@ -25,13 +24,6 @@ public class SubcategoryMapper {
                 .subcategory(subcategory.getName())
                 .categoryId(subcategory.getCategory().getId())
                 .category(subcategory.getCategory().getName())
-                .build();
-    }
-
-    public static Subcategory mapTOtoEntity(SubcategoryTO to, Category category) {
-        return Subcategory.builder()
-                .category(category)
-                .name(to.getSubcategory())
                 .build();
     }
 }

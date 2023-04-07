@@ -5,5 +5,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.tracker.collectiontracker.model.ImageLink;
 
 public interface ImageLinkRepository extends JpaRepository<ImageLink, Long> {
-    void deleteImageLinksByCollectible_Id(long id);
 }

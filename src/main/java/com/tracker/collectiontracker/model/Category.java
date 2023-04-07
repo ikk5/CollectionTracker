@@ -40,6 +40,9 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private final List<Subcategory> subcategories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private final List<Question> questions = new ArrayList<>();
+
     public List<Subcategory> getSubcategories() {
         return new ArrayList<>(subcategories);
     }
@@ -58,5 +61,20 @@ public class Category {
 
     public void deleteSubcategory(Subcategory subcategory) {
         subcategories.remove(subcategory);
+        subcategory.setCategory(null);
+    }
+
+    public List<Question> getQuestions() {
+        return new ArrayList<>(questions);
+    }
+
+    public void addQuestion(Question question) {
+        question.setCategory(this);
+        questions.add(question);
+    }
+
+    public void deleteQuestion(Question question) {
+        questions.remove(question);
+        question.setCategory(null);
     }
 }
