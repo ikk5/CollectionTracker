@@ -3,6 +3,7 @@ package com.tracker.collectiontracker.model;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -52,6 +53,9 @@ public class Collectible {
     @OneToMany(orphanRemoval = true, mappedBy = "collectible", cascade = CascadeType.ALL)
     private List<ImageLink> images = new ArrayList<>();
 
+    @OneToMany(orphanRemoval = true, mappedBy = "collectible", cascade = CascadeType.ALL)
+    private final List<Triplestore> triples = new ArrayList<>();
+
     public void addImage(String url) {
         if (StringUtils.isNotBlank(url)) {
             if (images == null) {
@@ -64,5 +68,25 @@ public class Collectible {
     public void clearImages() {
         images.forEach(img -> img.setCollectible(null));
         images.clear();
+    }
+
+    public void addOrUpdateTriple(String value, Question question) {
+        Triplestore existing = null;
+        for (Triplestore existingTriple : triples) {
+            if (Objects.equals(existingTriple.getQuestion().getId(), question.getId())) {
+                existing = existingTriple;
+                break;
+            }
+        }
+        if (existing == null) {
+            Triplestore triple = Triplestore.builder().value(value).question(question).collectible(this).build();
+            triples.add(triple);
+        } else {
+            existing.setValue(value);
+        }
+    }
+
+    public List<Triplestore> getTriples() {
+        return new ArrayList<>(triples);
     }
 }

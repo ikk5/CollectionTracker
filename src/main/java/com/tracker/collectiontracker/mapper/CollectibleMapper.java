@@ -24,6 +24,7 @@ public class CollectibleMapper {
                 .id(collectible.getId())
                 .subcategory(SubcategoryMapper.mapEntityToTO(collectible.getSubcategory()))
                 .images(collectible.getImages().stream().map(imageLink -> new ImageLinkTO(imageLink.getUrl())).toList())
+                .triples(TriplestoreMapper.mapEntityListToTOs(collectible.getTriples()))
                 .name(collectible.getName())
                 .addedDate(collectible.getAddedDate())
                 .build();
@@ -35,6 +36,8 @@ public class CollectibleMapper {
                 .subcategory(subcategory)
                 .build();
         to.getImages().forEach(img -> collectible.addImage(img.getUrl()));
+        to.getTriples().forEach(tripleTO ->
+                collectible.addOrUpdateTriple(tripleTO.getValue(), QuestionMapper.mapTOtoEntityWithId(tripleTO.getQuestion())));
         return collectible;
     }
 }

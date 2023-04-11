@@ -2,6 +2,8 @@ package com.tracker.collectiontracker.mapper;
 
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
+
 import com.tracker.collectiontracker.model.Datatype;
 import com.tracker.collectiontracker.model.Question;
 import com.tracker.collectiontracker.to.QuestionTO;
@@ -24,6 +26,8 @@ public class QuestionMapper {
                 .question(question.getName())
                 .datatype(question.getDatatype().getName())
                 .defaultValue(question.getDefaultValue())
+                .hidden(BooleanUtils.isTrue(question.getHidden()))
+                .listColumn(BooleanUtils.isTrue(question.getListColumn()))
                 .build();
     }
 
@@ -32,6 +36,14 @@ public class QuestionMapper {
                 .name(questionTO.getQuestion())
                 .datatype(Datatype.getByName(questionTO.getDatatype()))
                 .defaultValue(questionTO.getDefaultValue())
+                .hidden(BooleanUtils.isTrue(questionTO.getHidden()))
+                .listColumn(BooleanUtils.isTrue(questionTO.getListColumn()))
                 .build();
+    }
+
+    public static Question mapTOtoEntityWithId(QuestionTO questionTO) {
+        Question question = mapTOtoEntity(questionTO);
+        question.setId(questionTO.getId());
+        return question;
     }
 }

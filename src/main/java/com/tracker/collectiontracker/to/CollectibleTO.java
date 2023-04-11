@@ -24,5 +24,7 @@ public class CollectibleTO {
 
     private List<ImageLinkTO> images;
 
+    private List<TriplestoreTO> triples;
+
     private LocalDate addedDate;
 }

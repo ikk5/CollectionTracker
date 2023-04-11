@@ -19,4 +19,8 @@ public class QuestionTO {
     private String datatype;
 
     private String defaultValue;
+
+    private Boolean hidden;
+
+    private Boolean listColumn;
 }

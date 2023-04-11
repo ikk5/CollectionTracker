@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tracker.collectiontracker.mapper.CollectibleMapper;
+import com.tracker.collectiontracker.mapper.QuestionMapper;
 import com.tracker.collectiontracker.model.Collectible;
 import com.tracker.collectiontracker.model.Subcategory;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
@@ -99,6 +100,8 @@ public class CollectibleController {
             Collectible dbCollectible = collectibleData.get();
             dbCollectible.setName(collectibleTO.getName());
             dbCollectible.setSubcategory(subcategory);
+            collectibleTO.getTriples().forEach(triple -> dbCollectible.addOrUpdateTriple(triple.getValue(),
+                    QuestionMapper.mapTOtoEntityWithId(triple.getQuestion())));
 
             dbCollectible.clearImages();
             collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl()));

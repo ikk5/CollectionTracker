@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -166,6 +167,8 @@ public class CategoryController {
                     dbQuestion.setName(questionTO.getQuestion());
                     dbQuestion.setDatatype(Datatype.getByName(questionTO.getDatatype()));
                     dbQuestion.setDefaultValue(questionTO.getDefaultValue());
+                    dbQuestion.setHidden(BooleanUtils.isTrue(questionTO.getHidden()));
+                    dbQuestion.setListColumn(BooleanUtils.isTrue(questionTO.getListColumn()));
                     unusedQuestions.remove(dbQuestion);
                 }
             }
