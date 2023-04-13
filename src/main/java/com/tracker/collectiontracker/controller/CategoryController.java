@@ -100,6 +100,8 @@ public class CategoryController {
         ResponseEntity<CategoryTO> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
+        // TODO: valideer gereserveerde kolomnamen (Subcat, Name, id)
+
         if (StringUtils.isBlank(categoryTO.getName())) {
             response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         } else if (categoryData.isPresent()) {

@@ -12,7 +12,6 @@ public enum Datatype {
     CHECKBOX("Checkbox"),
     DROPDOWN("Dropdown"),
     NUMBER("Number"),
-    CHECKLIST("Checklist"),
     URL("URL");
 
     @Getter

@@ -7,7 +7,9 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,14 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tracker.collectiontracker.mapper.CollectibleMapper;
 import com.tracker.collectiontracker.mapper.QuestionMapper;
 import com.tracker.collectiontracker.model.Collectible;
+import com.tracker.collectiontracker.model.Question;
 import com.tracker.collectiontracker.model.Subcategory;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
 import com.tracker.collectiontracker.repository.SubcategoryRepository;
 import com.tracker.collectiontracker.to.CollectibleTO;
+import com.tracker.collectiontracker.to.CollectiblesListTO;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  */
+@Slf4j
 @CrossOrigin(origins = { "http://localhost:8081" })
 @RestController
 @RequestMapping("/api")
@@ -44,6 +51,7 @@ public class CollectibleController {
     @GetMapping("/collectibles")
     public ResponseEntity<List<CollectibleTO>> getAllCollectibles(@RequestParam(required = false) String name) {
         try {
+            log.info("getAllCollectibles called with name: {}", name);
             List<Collectible> collectibles;
             if (name == null) {
                 collectibles = new ArrayList<>(collectibleRepository.findAll());
@@ -55,6 +63,30 @@ public class CollectibleController {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
             return new ResponseEntity<>(CollectibleMapper.mapEntityListToTOs(collectibles), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping(value = "/collectibles/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CollectiblesListTO> getCollectiblesListForSubcategories(@RequestBody List<Long> subcategoryIds) {
+        try {
+            log.info("getCollectibleListForSubcategories called with subcategoryIds: {}", subcategoryIds);
+            List<Collectible> collectibles = new ArrayList<>();
+            List<Question> questions = new ArrayList<>();
+            if (!CollectionUtils.isEmpty(subcategoryIds)) {
+                List<Subcategory> subcategories = subcategoryRepository.findSubcategoriesByIdIn(subcategoryIds);
+                log.info("subcategories found: {}", subcategories);
+                if (!subcategories.isEmpty()) {
+                    questions = subcategories.get(0).getCategory().getQuestions();
+                    collectibles = new ArrayList<>(collectibleRepository.findCollectiblesBySubcategoryIn(subcategories));
+                }
+            }
+
+            if (collectibles.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(CollectibleMapper.mapEntitiesToCollectibleListTO(collectibles, questions), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
