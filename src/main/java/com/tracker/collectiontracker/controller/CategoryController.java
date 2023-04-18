@@ -1,6 +1,7 @@
 package com.tracker.collectiontracker.controller;
 
-import java.util.ArrayList;
+import static com.tracker.collectiontracker.controller.AbstractController.ORIGINS;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +29,7 @@ import com.tracker.collectiontracker.model.Category;
 import com.tracker.collectiontracker.model.Datatype;
 import com.tracker.collectiontracker.model.Question;
 import com.tracker.collectiontracker.model.Subcategory;
+import com.tracker.collectiontracker.model.User;
 import com.tracker.collectiontracker.repository.CategoryRepository;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
 import com.tracker.collectiontracker.repository.QuestionRepository;
@@ -39,10 +41,10 @@ import com.tracker.collectiontracker.to.SubcategoryTO;
 /**
  *
  */
-@CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials = "true")
+@CrossOrigin(origins = ORIGINS, maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
-public class CategoryController {
+public class CategoryController extends AbstractController {
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -57,14 +59,16 @@ public class CategoryController {
     private CollectibleRepository collectibleRepository;
 
     @GetMapping("/categories")
-    public ResponseEntity<List<CategoryTO>> getAllCategories(@RequestParam(required = false) String name) {
+    public ResponseEntity<List<CategoryTO>> getAllCategories(@RequestParam(required = false) String username) {
         try {
             List<Category> categories;
-            if (name == null) {
-                categories = new ArrayList<>(categoryRepository.findAll());
+            User user;
+            if (username == null) {
+                user = findLoggedInUser();
             } else {
-                categories = List.of(categoryRepository.findByName(name));
+                user = findUserByUsername(username);
             }
+            categories = List.of(categoryRepository.findCategoryByUser(user));
 
             if (categories.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -79,7 +83,9 @@ public class CategoryController {
     public ResponseEntity<CategoryTO> createCategory(@RequestBody CategoryTO categoryTO) {
         ResponseEntity<CategoryTO> response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         try {
+            User user = findLoggedInUser();
             Category category = CategoryMapper.mapTOtoEntity(categoryTO);
+            user.addCategory(category);
 
             if (isValidCategory(category)) {
                 CategoryTO savedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(category));

@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -23,7 +25,7 @@ import lombok.ToString;
  *
  */
 @Entity
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) }) // TODO: add user
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "user_id" }) })
 @Getter @Setter
 @ToString
 @Builder
@@ -37,6 +39,10 @@ public class Category {
 
     @Column(nullable = false)
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private final List<Subcategory> subcategories = new ArrayList<>();

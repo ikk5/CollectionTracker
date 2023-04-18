@@ -1,6 +1,9 @@
 package com.tracker.collectiontracker.controller;
 
+import static com.tracker.collectiontracker.controller.AbstractController.ORIGINS;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,10 +40,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-@CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials = "true")
+@CrossOrigin(origins = ORIGINS, maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
-public class CollectibleController {
+public class CollectibleController extends AbstractController {
 
     @Autowired
     private CollectibleRepository collectibleRepository;
@@ -68,14 +71,15 @@ public class CollectibleController {
         }
     }
 
-    @PostMapping(value = "/collectibles/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CollectiblesListTO> getCollectiblesListForSubcategories(@RequestBody List<Long> subcategoryIds) {
+    @GetMapping(value = "/collectibles/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CollectiblesListTO> getCollectiblesListForSubcategories(@RequestHeader String subcategoryIds) {
         try {
             log.info("getCollectibleListForSubcategories called with subcategoryIds: {}", subcategoryIds);
             List<Collectible> collectibles = new ArrayList<>();
             List<Question> questions = new ArrayList<>();
-            if (!CollectionUtils.isEmpty(subcategoryIds)) {
-                List<Subcategory> subcategories = subcategoryRepository.findSubcategoriesByIdIn(subcategoryIds);
+            if (!StringUtils.isEmpty(subcategoryIds)) {
+                List<Long> ids = Arrays.stream(subcategoryIds.split(",")).map(Long::valueOf).toList();
+                List<Subcategory> subcategories = subcategoryRepository.findSubcategoriesByIdIn(ids);
                 log.info("subcategories found: {}", subcategories);
                 if (!subcategories.isEmpty()) {
                     questions = subcategories.get(0).getCategory().getQuestions();

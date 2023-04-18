@@ -1,5 +1,7 @@
 package com.tracker.collectiontracker.controller;
 
+import static com.tracker.collectiontracker.controller.AbstractController.ORIGINS;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +33,7 @@ import jakarta.validation.Valid;
  *
  */
 
-@CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials = "true")
+@CrossOrigin(origins = ORIGINS, maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
