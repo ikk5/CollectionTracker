@@ -20,4 +20,6 @@ public class SubcategoryTO {
     private Long subcategoryId;
 
     private String subcategory;
+
+    private String username;
 }

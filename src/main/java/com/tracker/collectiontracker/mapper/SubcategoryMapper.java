@@ -24,6 +24,7 @@ public class SubcategoryMapper {
                 .subcategory(subcategory.getName())
                 .categoryId(subcategory.getCategory().getId())
                 .category(subcategory.getCategory().getName())
+                .username(subcategory.getCategory().getUser().getUsername())
                 .build();
     }
 }
