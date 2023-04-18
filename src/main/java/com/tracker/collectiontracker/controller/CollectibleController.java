@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-@CrossOrigin(origins = { "http://localhost:8081" })
+@CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
 public class CollectibleController {

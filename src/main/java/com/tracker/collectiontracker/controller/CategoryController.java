@@ -39,7 +39,7 @@ import com.tracker.collectiontracker.to.SubcategoryTO;
 /**
  *
  */
-@CrossOrigin(origins = { "http://localhost:8081" })
+@CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
 public class CategoryController {
