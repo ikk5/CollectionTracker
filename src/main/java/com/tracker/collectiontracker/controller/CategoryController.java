@@ -68,7 +68,7 @@ public class CategoryController extends AbstractController {
             } else {
                 user = findUserByUsername(username);
             }
-            categories = List.of(categoryRepository.findCategoryByUser(user));
+            categories = categoryRepository.findCategoriesByUser(user);
 
             if (categories.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);

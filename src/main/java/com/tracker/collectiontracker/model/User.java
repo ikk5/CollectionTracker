@@ -27,7 +27,7 @@ import lombok.ToString;
 @Entity
 @Table
 @Getter @Setter
-@ToString
+@ToString(exclude = "categories")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
