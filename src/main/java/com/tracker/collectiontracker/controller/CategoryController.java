@@ -37,6 +37,7 @@ import com.tracker.collectiontracker.repository.SubcategoryRepository;
 import com.tracker.collectiontracker.to.CategoryTO;
 import com.tracker.collectiontracker.to.QuestionTO;
 import com.tracker.collectiontracker.to.SubcategoryTO;
+import com.tracker.collectiontracker.to.response.MessageResponse;
 
 /**
  *
@@ -80,19 +81,19 @@ public class CategoryController extends AbstractController {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity<CategoryTO> createCategory(@RequestBody CategoryTO categoryTO) {
-        ResponseEntity<CategoryTO> response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+    public ResponseEntity<MessageResponse> createCategory(@RequestBody CategoryTO categoryTO) {
+        ResponseEntity<MessageResponse> response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         try {
             User user = findLoggedInUser();
             Category category = CategoryMapper.mapTOtoEntity(categoryTO);
             user.addCategory(category);
 
             if (isValidCategory(category)) {
-                CategoryTO savedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(category));
-                response = new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+                Category savedCategory = categoryRepository.save(category);
+                response = new ResponseEntity<>(new MessageResponse("This category was saved successfully!", savedCategory.getId()), HttpStatus.CREATED);
             }
         } catch (Exception e) {
-            response = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response = new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return response;
     }
@@ -102,25 +103,24 @@ public class CategoryController extends AbstractController {
     }
 
     @PutMapping("/categories/{id}")
-    public ResponseEntity<CategoryTO> updateCategory(@PathVariable("id") long id, @RequestBody CategoryTO categoryTO) {
-        ResponseEntity<CategoryTO> response;
+    public ResponseEntity<MessageResponse> updateCategory(@PathVariable("id") long id, @RequestBody CategoryTO categoryTO) {
+        ResponseEntity<MessageResponse> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
         // TODO: valideer gereserveerde kolomnamen (Subcat, Name, id)
 
         if (StringUtils.isBlank(categoryTO.getName())) {
-            response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+            response = new ResponseEntity<>(new MessageResponse("Category invalid"), HttpStatus.NOT_ACCEPTABLE);
         } else if (categoryData.isPresent()) {
             Category dbCategory = categoryData.get();
             dbCategory.setName(categoryTO.getName());
 
             updateSubcategories(categoryTO, dbCategory);
             updateQuestion(categoryTO, dbCategory);
-
-            CategoryTO updatedCategory = CategoryMapper.mapEntityToTO(categoryRepository.save(dbCategory));
-            response = new ResponseEntity<>(updatedCategory, HttpStatus.OK);
+            categoryRepository.save(dbCategory);
+            response = new ResponseEntity<>(new MessageResponse("Category successfully updated."), HttpStatus.OK);
         } else {
-            response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            response = new ResponseEntity<>(new MessageResponse(String.format("No category found with id %s", id)), HttpStatus.NOT_FOUND);
         }
         return response;
     }
@@ -185,7 +185,6 @@ public class CategoryController extends AbstractController {
         if (!unusedQuestions.isEmpty()) {
             // These questions are deleted
             for (Question unused : unusedQuestions) {
-                // TODO: delete triplestore
                 dbCategory.deleteQuestion(unused);
                 questionRepository.delete(unused);
             }
@@ -204,22 +203,24 @@ public class CategoryController extends AbstractController {
     }
 
     @DeleteMapping("/categories/{id}")
-    public ResponseEntity<HttpStatus> deleteCategory(@PathVariable("id") long id) {
+    public ResponseEntity<MessageResponse> deleteCategory(@PathVariable("id") long id) {
         try {
             categoryRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(new MessageResponse(String.format("Category with id %s has been deleted.", id)), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/categories")
-    public ResponseEntity<HttpStatus> deleteAllCategories() {
+    public ResponseEntity<MessageResponse> deleteAllCategories() {
         try {
-            categoryRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.OK);
+            User user = findLoggedInUser();
+            user.clearCategories();
+            categoryRepository.deleteAll(user.getCategories());
+            return new ResponseEntity<>(new MessageResponse("All categories have been deleted."), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.tracker.collectiontracker.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.tracker.collectiontracker.model.Collectible;
@@ -27,7 +28,8 @@ public class CollectibleMapper {
         return CollectibleTO.builder()
                 .id(collectible.getId())
                 .subcategory(SubcategoryMapper.mapEntityToTO(collectible.getSubcategory()))
-                .images(collectible.getImages().stream().map(imageLink -> new ImageLinkTO(imageLink.getUrl())).toList())
+                .images(collectible.getImages() == null ? new ArrayList<>() :
+                        collectible.getImages().stream().map(imageLink -> new ImageLinkTO(imageLink.getUrl())).toList())
                 .triples(TriplestoreMapper.mapEntityListToTOs(collectible.getTriples()))
                 .name(collectible.getName())
                 .addedDate(collectible.getAddedDate())

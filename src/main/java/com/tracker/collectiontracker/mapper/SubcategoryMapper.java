@@ -25,6 +25,7 @@ public class SubcategoryMapper {
                 .categoryId(subcategory.getCategory().getId())
                 .category(subcategory.getCategory().getName())
                 .username(subcategory.getCategory().getUser().getUsername())
+                .collectibleCount(subcategory.getCollectibles().size())
                 .build();
     }
 }

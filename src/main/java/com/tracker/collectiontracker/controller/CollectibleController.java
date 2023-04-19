@@ -29,10 +29,12 @@ import com.tracker.collectiontracker.mapper.QuestionMapper;
 import com.tracker.collectiontracker.model.Collectible;
 import com.tracker.collectiontracker.model.Question;
 import com.tracker.collectiontracker.model.Subcategory;
+import com.tracker.collectiontracker.model.User;
 import com.tracker.collectiontracker.repository.CollectibleRepository;
 import com.tracker.collectiontracker.repository.SubcategoryRepository;
 import com.tracker.collectiontracker.to.CollectibleTO;
 import com.tracker.collectiontracker.to.CollectiblesListTO;
+import com.tracker.collectiontracker.to.response.MessageResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -108,18 +110,19 @@ public class CollectibleController extends AbstractController {
     }
 
     @PostMapping("/collectibles")
-    public ResponseEntity<CollectibleTO> createCollectible(@RequestBody CollectibleTO collectibleTO) {
+    public ResponseEntity<MessageResponse> createCollectible(@RequestBody CollectibleTO collectibleTO) {
         try {
             Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
             Collectible collectible = CollectibleMapper.mapTOtoEntity(collectibleTO, subcategory);
             if (isValidCollectible(collectible)) {
-                CollectibleTO savedCollectible = CollectibleMapper.mapEntityToTO(collectibleRepository.save(collectible));
-                return new ResponseEntity<>(savedCollectible, HttpStatus.CREATED);
+                Collectible savedCollectible = collectibleRepository.save(collectible);
+                MessageResponse response = new MessageResponse("This collectible was saved successfully!", savedCollectible.getId());
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+                return new ResponseEntity<>(new MessageResponse("Collectible invalid"), HttpStatus.NOT_ACCEPTABLE);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -128,48 +131,60 @@ public class CollectibleController extends AbstractController {
     }
 
     @PutMapping("/collectibles/{id}")
-    public ResponseEntity<CollectibleTO> updateCollectible(@PathVariable("id") long id, @RequestBody CollectibleTO collectibleTO) {
-        Optional<Collectible> collectibleData = collectibleRepository.findById(id);
-        Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
+    public ResponseEntity<MessageResponse> updateCollectible(@PathVariable("id") long id, @RequestBody CollectibleTO collectibleTO) {
+        try {
+            Optional<Collectible> collectibleData = collectibleRepository.findById(id);
+            Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
 
-        if (collectibleData.isPresent() && subcategory != null) {
-            Collectible dbCollectible = collectibleData.get();
-            dbCollectible.setName(collectibleTO.getName());
-            dbCollectible.setSubcategory(subcategory);
-            collectibleTO.getTriples().forEach(triple -> dbCollectible.addOrUpdateTriple(triple.getValue(),
-                    QuestionMapper.mapTOtoEntityWithId(triple.getQuestion())));
+            if (collectibleData.isPresent() && subcategory != null) {
+                Collectible dbCollectible = collectibleData.get();
+                dbCollectible.setName(collectibleTO.getName());
+                dbCollectible.setSubcategory(subcategory);
+                collectibleTO.getTriples().forEach(triple -> dbCollectible.addOrUpdateTriple(triple.getValue(),
+                        QuestionMapper.mapTOtoEntityWithId(triple.getQuestion())));
 
-            dbCollectible.clearImages();
-            collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl()));
+                dbCollectible.clearImages();
+                collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl()));
 
-            if (isValidCollectible(dbCollectible)) {
-                CollectibleTO updatedCollectable = CollectibleMapper.mapEntityToTO(collectibleRepository.save(dbCollectible));
-                return new ResponseEntity<>(updatedCollectable, HttpStatus.OK);
+                if (isValidCollectible(dbCollectible)) {
+                    collectibleRepository.save(dbCollectible);
+                    return new ResponseEntity<>(new MessageResponse("This collectible was saved successfully!"), HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(new MessageResponse("Collectible is invalid."), HttpStatus.NOT_ACCEPTABLE);
+                }
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+                return new ResponseEntity<>(new MessageResponse("No collecible found with id: " + id), HttpStatus.NOT_FOUND);
             }
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
     }
 
     @DeleteMapping("/collectibles/{id}")
-    public ResponseEntity<HttpStatus> deleteCollectible(@PathVariable("id") long id) {
+    public ResponseEntity<MessageResponse> deleteCollectible(@PathVariable("id") long id) {
         try {
             collectibleRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(new MessageResponse("Collectible has been deleted."), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/collectibles")
-    public ResponseEntity<HttpStatus> deleteAllCollectibles() {
+    public ResponseEntity<MessageResponse> deleteAllCollectibles() {
         try {
-            collectibleRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.OK);
+            User user = findLoggedInUser();
+            List<Collectible> collectibles = new ArrayList<>();
+            user.getCategories().forEach(cat -> cat.getSubcategories().forEach(subcat -> {
+                collectibles.addAll(subcat.getCollectibles());
+                subcat.getCollectibles().clear();
+            }));
+            collectibleRepository.deleteAll(collectibles);
+            log.info("{} collectibles deleted.", collectibles.size());
+            return new ResponseEntity<>(new MessageResponse(String.format("%s collectibles have been deleted.", collectibles.size())), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -22,4 +22,6 @@ public class SubcategoryTO {
     private String subcategory;
 
     private String username;
+
+    private int collectibleCount;
 }

@@ -63,4 +63,8 @@ public class User {
         categories.remove(category);
         category.setUser(null);
     }
+
+    public void clearCategories() {
+        categories.clear();
+    }
 }

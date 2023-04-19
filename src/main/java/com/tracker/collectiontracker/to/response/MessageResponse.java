@@ -11,4 +11,13 @@ import lombok.Setter;
 @Getter @Setter
 public class MessageResponse {
     private String message;
+
+    /**
+     * Id if an object was saved.
+     */
+    private Long id;
+
+    public MessageResponse(String message) {
+        this.message = message;
+    }
 }
