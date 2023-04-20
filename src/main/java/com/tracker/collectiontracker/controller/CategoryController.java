@@ -118,7 +118,7 @@ public class CategoryController extends AbstractController {
             updateSubcategories(categoryTO, dbCategory);
             updateQuestion(categoryTO, dbCategory);
             categoryRepository.save(dbCategory);
-            response = new ResponseEntity<>(new MessageResponse("Category successfully updated."), HttpStatus.OK);
+            response = new ResponseEntity<>(new MessageResponse("Category successfully updated.", id), HttpStatus.OK);
         } else {
             response = new ResponseEntity<>(new MessageResponse(String.format("No category found with id %s", id)), HttpStatus.NOT_FOUND);
         }
@@ -206,7 +206,7 @@ public class CategoryController extends AbstractController {
     public ResponseEntity<MessageResponse> deleteCategory(@PathVariable("id") long id) {
         try {
             categoryRepository.deleteById(id);
-            return new ResponseEntity<>(new MessageResponse(String.format("Category with id %s has been deleted.", id)), HttpStatus.OK);
+            return new ResponseEntity<>(new MessageResponse("Category has been deleted."), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

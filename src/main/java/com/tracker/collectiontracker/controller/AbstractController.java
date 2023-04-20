@@ -13,7 +13,7 @@ import com.tracker.collectiontracker.security.services.UserDetailsImpl;
  */
 public abstract class AbstractController {
 
-    public static final String ORIGINS = "http://localhost:8081";
+    public static final String ORIGINS = "${origins.url}";
 
     @Autowired
     protected UserRepository userRepository;
