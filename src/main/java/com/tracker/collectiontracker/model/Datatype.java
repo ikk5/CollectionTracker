@@ -12,7 +12,8 @@ public enum Datatype {
     CHECKBOX("Checkbox"),
     DROPDOWN("Dropdown"),
     NUMBER("Number"),
-    URL("URL");
+    URL("URL"),
+    DATE("Date");
 
     @Getter
     private final String name;
