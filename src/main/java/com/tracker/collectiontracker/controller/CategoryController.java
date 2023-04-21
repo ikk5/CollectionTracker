@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,9 +40,12 @@ import com.tracker.collectiontracker.to.QuestionTO;
 import com.tracker.collectiontracker.to.SubcategoryTO;
 import com.tracker.collectiontracker.to.response.MessageResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  *
  */
+@Slf4j
 @CrossOrigin(origins = ORIGINS, maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
@@ -58,6 +62,8 @@ public class CategoryController extends AbstractController {
 
     @Autowired
     private CollectibleRepository collectibleRepository;
+
+    private static final List<String> RESERVED_COLUMNAMES = List.of("name", "subcategory", "id");
 
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryTO>> getAllCategories(@RequestParam(required = false) String username) {
@@ -82,15 +88,19 @@ public class CategoryController extends AbstractController {
 
     @PostMapping("/categories")
     public ResponseEntity<MessageResponse> createCategory(@RequestBody CategoryTO categoryTO) {
-        ResponseEntity<MessageResponse> response = new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        ResponseEntity<MessageResponse> response;
         try {
-            User user = findLoggedInUser();
-            Category category = CategoryMapper.mapTOtoEntity(categoryTO);
-            user.addCategory(category);
+            if (!isValidCategory(categoryTO)) {
+                User user = findLoggedInUser();
+                Category category = CategoryMapper.mapTOtoEntity(categoryTO);
+                user.addCategory(category);
 
-            if (isValidCategory(category)) {
                 Category savedCategory = categoryRepository.save(category);
                 response = new ResponseEntity<>(new MessageResponse("This category was saved successfully!", savedCategory.getId()), HttpStatus.CREATED);
+            } else {
+                response = new ResponseEntity<>(
+                        new MessageResponse("This category is invalid, make sure the questions don't have a reserved name (id, name, subcategory)"),
+                        HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
             response = new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -98,21 +108,22 @@ public class CategoryController extends AbstractController {
         return response;
     }
 
-    private boolean isValidCategory(Category category) {
-        return StringUtils.isNotBlank(category.getName());
-    }
-
     @PutMapping("/categories/{id}")
     public ResponseEntity<MessageResponse> updateCategory(@PathVariable("id") long id, @RequestBody CategoryTO categoryTO) {
         ResponseEntity<MessageResponse> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
-        // TODO: valideer gereserveerde kolomnamen (Subcat, Name, id)
-
-        if (StringUtils.isBlank(categoryTO.getName())) {
-            response = new ResponseEntity<>(new MessageResponse("Category invalid"), HttpStatus.NOT_ACCEPTABLE);
+        if (!isValidCategory(categoryTO)) {
+            response = new ResponseEntity<>(
+                    new MessageResponse("This category is invalid, make sure the questions don't have a reserved name (id, name, subcategory)"),
+                    HttpStatus.BAD_REQUEST);
         } else if (categoryData.isPresent()) {
             Category dbCategory = categoryData.get();
+            if (!isCategoryOwnedByLoggedInUser(dbCategory)) {
+                log.warn("User {} tried to alter a different users' category (id {})", findLoggedInUser().getUsername(), id);
+                return new ResponseEntity<>(new MessageResponse("You're not allowed to alter categories from other users."), HttpStatus.UNAUTHORIZED);
+            }
+
             dbCategory.setName(categoryTO.getName());
 
             updateSubcategories(categoryTO, dbCategory);
@@ -123,6 +134,13 @@ public class CategoryController extends AbstractController {
             response = new ResponseEntity<>(new MessageResponse(String.format("No category found with id %s", id)), HttpStatus.NOT_FOUND);
         }
         return response;
+    }
+
+    private boolean isValidCategory(CategoryTO categoryTO) {
+        boolean isValid = CollectionUtils.isEmpty(categoryTO.getQuestions()) ||
+                categoryTO.getQuestions().stream().anyMatch(question ->
+                        RESERVED_COLUMNAMES.contains(question.getQuestion().toLowerCase()));
+        return isValid && StringUtils.isBlank(categoryTO.getName());
     }
 
     private void updateSubcategories(CategoryTO categoryTO, Category dbCategory) {
@@ -204,12 +222,23 @@ public class CategoryController extends AbstractController {
 
     @DeleteMapping("/categories/{id}")
     public ResponseEntity<MessageResponse> deleteCategory(@PathVariable("id") long id) {
+        ResponseEntity<MessageResponse> response;
         try {
-            categoryRepository.deleteById(id);
-            return new ResponseEntity<>(new MessageResponse("Category has been deleted."), HttpStatus.OK);
+            Category category = categoryRepository.findById(id).orElse(null);
+            if (category == null) {
+                log.warn("Attempt to delete category with id {}, which couldn't be found.", id);
+                response = new ResponseEntity<>(new MessageResponse("Category not found."), HttpStatus.NO_CONTENT);
+            } else if (isCategoryOwnedByLoggedInUser(category)) {
+                categoryRepository.delete(category);
+                response = new ResponseEntity<>(new MessageResponse("Category has been deleted."), HttpStatus.OK);
+            } else {
+                log.warn("User {} tried to delete a different users' category (id {})", findLoggedInUser().getUsername(), id);
+                response = new ResponseEntity<>(new MessageResponse("You're not allowed to delete categories from other users."), HttpStatus.UNAUTHORIZED);
+            }
         } catch (Exception e) {
-            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            response = new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        return response;
     }
 
     @DeleteMapping("/categories")
@@ -232,5 +261,9 @@ public class CategoryController extends AbstractController {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private boolean isCategoryOwnedByLoggedInUser(Category category) {
+        return StringUtils.equals(findLoggedInUser().getUsername(), category.getUser().getUsername());
     }
 }

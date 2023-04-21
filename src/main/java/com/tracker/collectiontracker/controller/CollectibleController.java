@@ -138,6 +138,10 @@ public class CollectibleController extends AbstractController {
 
             if (collectibleData.isPresent() && subcategory != null) {
                 Collectible dbCollectible = collectibleData.get();
+                if (!isCollectibleOwnedByLoggedInUser(dbCollectible)) {
+                    log.warn("User {} tried to alter a different users' collectible (id {})", findLoggedInUser().getUsername(), id);
+                    return new ResponseEntity<>(new MessageResponse("You're not allowed to alter collectibles from other users."), HttpStatus.UNAUTHORIZED);
+                }
                 dbCollectible.setName(collectibleTO.getName());
                 dbCollectible.setSubcategory(subcategory);
                 collectibleTO.getTriples().forEach(triple -> dbCollectible.addOrUpdateTriple(triple.getValue(),
@@ -163,14 +167,28 @@ public class CollectibleController extends AbstractController {
 
     @DeleteMapping("/collectibles/{id}")
     public ResponseEntity<MessageResponse> deleteCollectible(@PathVariable("id") long id) {
+        ResponseEntity<MessageResponse> response;
         try {
-            collectibleRepository.deleteById(id);
-            return new ResponseEntity<>(new MessageResponse("Collectible has been deleted."), HttpStatus.OK);
+            Collectible collectible = collectibleRepository.findById(id).orElse(null);
+            if (collectible == null) {
+                log.warn("Attempt to delete collectible with id {}, which couldn't be found.", id);
+                response = new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            } else if (isCollectibleOwnedByLoggedInUser(collectible)) {
+                collectibleRepository.delete(collectible);
+                response = new ResponseEntity<>(new MessageResponse("Collectible has been deleted."), HttpStatus.OK);
+            } else {
+                log.warn("User {} tried to delete a different users' collectible (id {})", findLoggedInUser().getUsername(), id);
+                response = new ResponseEntity<>(new MessageResponse("You're not allowed to delete collectibles from other users."), HttpStatus.UNAUTHORIZED);
+            }
         } catch (Exception e) {
-            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            response = new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        return response;
     }
 
+    /**
+     * Deletes all collectibles for the current user.
+     */
     @DeleteMapping("/collectibles")
     public ResponseEntity<MessageResponse> deleteAllCollectibles() {
         try {
@@ -186,5 +204,10 @@ public class CollectibleController extends AbstractController {
         } catch (Exception e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private boolean isCollectibleOwnedByLoggedInUser(Collectible collectible) {
+        return StringUtils.equals(findLoggedInUser().getUsername(),
+                collectible.getSubcategory().getCategory().getUser().getUsername());
     }
 }
