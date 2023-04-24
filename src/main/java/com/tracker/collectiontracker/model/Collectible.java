@@ -32,7 +32,7 @@ import lombok.ToString;
 @Entity
 @Table
 @Getter @Setter
-@ToString
+@ToString(exclude = { "images", "triples", "subcategory" })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

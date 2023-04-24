@@ -22,7 +22,7 @@ import lombok.ToString;
 @Entity
 @Table
 @Getter @Setter
-@ToString
+@ToString(exclude = { "collectible", "question" })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

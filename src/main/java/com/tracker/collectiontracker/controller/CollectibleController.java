@@ -207,7 +207,8 @@ public class CollectibleController extends AbstractController {
     }
 
     private boolean isCollectibleOwnedByLoggedInUser(Collectible collectible) {
-        return StringUtils.equals(findLoggedInUser().getUsername(),
+        User loggedInUser = findLoggedInUser();
+        return loggedInUser != null && StringUtils.equals(loggedInUser.getUsername(),
                 collectible.getSubcategory().getCategory().getUser().getUsername());
     }
 }

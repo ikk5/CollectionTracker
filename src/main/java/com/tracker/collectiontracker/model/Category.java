@@ -30,7 +30,7 @@ import lombok.ToString;
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "user_id" }) })
 @Getter @Setter
-@ToString
+@ToString(exclude = { "questions", "subcategories" })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

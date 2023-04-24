@@ -20,7 +20,7 @@ import lombok.ToString;
 @Entity
 @Table
 @Getter @Setter
-@ToString
+@ToString(exclude = "collectible")
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageLink {

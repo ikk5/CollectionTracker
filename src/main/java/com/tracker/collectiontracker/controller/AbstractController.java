@@ -19,8 +19,11 @@ public abstract class AbstractController {
     protected UserRepository userRepository;
 
     protected User findLoggedInUser() throws UsernameNotFoundException {
-        String username = ((UserDetailsImpl)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        return findUserByUsername(username);
+        User user = null;
+        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserDetailsImpl userDetails) {
+            user = findUserByUsername(userDetails.getUsername());
+        }
+        return user;
     }
 
     protected User findUserByUsername(String username) throws UsernameNotFoundException {

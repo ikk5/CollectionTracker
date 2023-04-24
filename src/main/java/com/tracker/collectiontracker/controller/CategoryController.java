@@ -266,6 +266,7 @@ public class CategoryController extends AbstractController {
     }
 
     private boolean isCategoryOwnedByLoggedInUser(Category category) {
-        return StringUtils.equals(findLoggedInUser().getUsername(), category.getUser().getUsername());
+        User loggedInUser = findLoggedInUser();
+        return loggedInUser != null && StringUtils.equals(loggedInUser.getUsername(), category.getUser().getUsername());
     }
 }
