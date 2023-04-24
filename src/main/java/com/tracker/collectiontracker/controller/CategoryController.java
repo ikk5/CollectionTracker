@@ -90,7 +90,7 @@ public class CategoryController extends AbstractController {
     public ResponseEntity<MessageResponse> createCategory(@RequestBody CategoryTO categoryTO) {
         ResponseEntity<MessageResponse> response;
         try {
-            if (isInvalidCategory(categoryTO)) {
+            if (isValidCategory(categoryTO)) {
                 User user = findLoggedInUser();
                 Category category = CategoryMapper.mapTOtoEntity(categoryTO);
                 user.addCategory(category);
@@ -113,7 +113,7 @@ public class CategoryController extends AbstractController {
         ResponseEntity<MessageResponse> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
-        if (isInvalidCategory(categoryTO)) {
+        if (!isValidCategory(categoryTO)) {
             response = new ResponseEntity<>(
                     new MessageResponse("This category is invalid, make sure the questions don't have a reserved name (id, name, subcategory)"),
                     HttpStatus.BAD_REQUEST);
@@ -136,11 +136,11 @@ public class CategoryController extends AbstractController {
         return response;
     }
 
-    private boolean isInvalidCategory(CategoryTO categoryTO) {
-        boolean isInvalid = CollectionUtils.isEmpty(categoryTO.getQuestions()) ||
-                categoryTO.getQuestions().stream().anyMatch(question ->
+    private boolean isValidCategory(CategoryTO categoryTO) {
+        boolean isValid = CollectionUtils.isEmpty(categoryTO.getQuestions()) ||
+                categoryTO.getQuestions().stream().noneMatch(question ->
                         RESERVED_COLUMNAMES.contains(question.getQuestion().toLowerCase()));
-        return isInvalid && StringUtils.isBlank(categoryTO.getName());
+        return isValid && StringUtils.isNotBlank(categoryTO.getName());
     }
 
     private void updateSubcategories(CategoryTO categoryTO, Category dbCategory) {
