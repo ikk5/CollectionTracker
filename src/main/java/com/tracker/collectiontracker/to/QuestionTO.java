@@ -23,4 +23,6 @@ public class QuestionTO {
     private Boolean hidden;
 
     private Boolean listColumn;
+
+    private int displayOrder;
 }

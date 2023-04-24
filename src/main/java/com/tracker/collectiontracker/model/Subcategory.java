@@ -41,6 +41,9 @@ public class Subcategory {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false, name = "display_order")
+    private int displayOrder;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

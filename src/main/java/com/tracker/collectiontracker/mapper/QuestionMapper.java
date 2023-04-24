@@ -28,6 +28,7 @@ public class QuestionMapper {
                 .defaultValue(question.getDefaultValue())
                 .hidden(BooleanUtils.isTrue(question.getHidden()))
                 .listColumn(BooleanUtils.isTrue(question.getListColumn()))
+                .displayOrder(question.getDisplayOrder())
                 .build();
     }
 
@@ -38,6 +39,7 @@ public class QuestionMapper {
                 .defaultValue(questionTO.getDefaultValue())
                 .hidden(BooleanUtils.isTrue(questionTO.getHidden()))
                 .listColumn(BooleanUtils.isTrue(questionTO.getListColumn()))
+                .displayOrder(questionTO.getDisplayOrder())
                 .build();
     }
 

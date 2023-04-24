@@ -90,7 +90,7 @@ public class CategoryController extends AbstractController {
     public ResponseEntity<MessageResponse> createCategory(@RequestBody CategoryTO categoryTO) {
         ResponseEntity<MessageResponse> response;
         try {
-            if (!isValidCategory(categoryTO)) {
+            if (isInvalidCategory(categoryTO)) {
                 User user = findLoggedInUser();
                 Category category = CategoryMapper.mapTOtoEntity(categoryTO);
                 user.addCategory(category);
@@ -113,7 +113,7 @@ public class CategoryController extends AbstractController {
         ResponseEntity<MessageResponse> response;
         Optional<Category> categoryData = categoryRepository.findById(id);
 
-        if (!isValidCategory(categoryTO)) {
+        if (isInvalidCategory(categoryTO)) {
             response = new ResponseEntity<>(
                     new MessageResponse("This category is invalid, make sure the questions don't have a reserved name (id, name, subcategory)"),
                     HttpStatus.BAD_REQUEST);
@@ -136,11 +136,11 @@ public class CategoryController extends AbstractController {
         return response;
     }
 
-    private boolean isValidCategory(CategoryTO categoryTO) {
-        boolean isValid = CollectionUtils.isEmpty(categoryTO.getQuestions()) ||
+    private boolean isInvalidCategory(CategoryTO categoryTO) {
+        boolean isInvalid = CollectionUtils.isEmpty(categoryTO.getQuestions()) ||
                 categoryTO.getQuestions().stream().anyMatch(question ->
                         RESERVED_COLUMNAMES.contains(question.getQuestion().toLowerCase()));
-        return isValid && StringUtils.isBlank(categoryTO.getName());
+        return isInvalid && StringUtils.isBlank(categoryTO.getName());
     }
 
     private void updateSubcategories(CategoryTO categoryTO, Category dbCategory) {
@@ -150,7 +150,7 @@ public class CategoryController extends AbstractController {
         for (SubcategoryTO subcategoryTO : categoryTO.getSubcategories()) {
             if (subcategoryTO.getSubcategoryId() == null) {
                 // Subcategory is new, add to Category
-                dbCategory.addSubcategory(null, subcategoryTO.getSubcategory());
+                dbCategory.addSubcategory(null, subcategoryTO.getSubcategory(), subcategoryTO.getDisplayOrder());
             } else {
                 // Subcategory may be renamed, copy name just in case.
                 Subcategory dbSubcategory =
@@ -159,6 +159,7 @@ public class CategoryController extends AbstractController {
                                 .findFirst().orElse(null);
                 if (dbSubcategory != null) {
                     dbSubcategory.setName(subcategoryTO.getSubcategory());
+                    dbSubcategory.setDisplayOrder(subcategoryTO.getDisplayOrder());
                     unusedSubcategories.remove(dbSubcategory);
                 }
             }
@@ -195,6 +196,7 @@ public class CategoryController extends AbstractController {
                     dbQuestion.setDefaultValue(questionTO.getDefaultValue());
                     dbQuestion.setHidden(BooleanUtils.isTrue(questionTO.getHidden()));
                     dbQuestion.setListColumn(BooleanUtils.isTrue(questionTO.getListColumn()));
+                    dbQuestion.setDisplayOrder(questionTO.getDisplayOrder());
                     unusedQuestions.remove(dbQuestion);
                 }
             }

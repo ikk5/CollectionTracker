@@ -1,7 +1,10 @@
 package com.tracker.collectiontracker.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+
+import org.springframework.util.CollectionUtils;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -51,19 +54,24 @@ public class Category {
     private final List<Question> questions = new ArrayList<>();
 
     public List<Subcategory> getSubcategories() {
-        return new ArrayList<>(subcategories);
+        List<Subcategory> retval = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(subcategories)) {
+            retval = new ArrayList<>(subcategories);
+            retval.sort(Comparator.comparing(Subcategory::getDisplayOrder));
+        }
+        return retval;
     }
 
-    public void addSubcategory(Long subcategoryId, String subcategoryName) {
+    public void addSubcategory(Long subcategoryId, String subcategoryName, int displayOrder) {
         if (subcategoryId == null) {
-            addSubcategory(subcategoryName);
+            addSubcategory(subcategoryName, displayOrder);
         } else {
-            subcategories.add(Subcategory.builder().id(subcategoryId).name(subcategoryName).category(this).build());
+            subcategories.add(Subcategory.builder().id(subcategoryId).name(subcategoryName).displayOrder(displayOrder).category(this).build());
         }
     }
 
-    private void addSubcategory(String subcategoryName) {
-        subcategories.add(Subcategory.builder().name(subcategoryName).category(this).build());
+    private void addSubcategory(String subcategoryName, int displayOrder) {
+        subcategories.add(Subcategory.builder().name(subcategoryName).displayOrder(displayOrder).category(this).build());
     }
 
     public void deleteSubcategory(Subcategory subcategory) {
@@ -72,7 +80,12 @@ public class Category {
     }
 
     public List<Question> getQuestions() {
-        return new ArrayList<>(questions);
+        List<Question> retval = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(questions)) {
+            retval = new ArrayList<>(questions);
+            retval.sort(Comparator.comparing(Question::getDisplayOrder));
+        }
+        return retval;
     }
 
     public void addQuestion(Question question) {

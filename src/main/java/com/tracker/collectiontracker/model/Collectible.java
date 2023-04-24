@@ -2,10 +2,12 @@ package com.tracker.collectiontracker.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -56,13 +58,22 @@ public class Collectible {
     @OneToMany(orphanRemoval = true, mappedBy = "collectible", cascade = CascadeType.ALL)
     private final List<Triplestore> triples = new ArrayList<>();
 
-    public void addImage(String url) {
+    public void addImage(String url, int displayOrder) {
         if (StringUtils.isNotBlank(url)) {
             if (images == null) {
                 images = new ArrayList<>();
             }
-            images.add(new ImageLink(url, this));
+            images.add(new ImageLink(url, displayOrder, this));
         }
+    }
+
+    public List<ImageLink> getImages() {
+        List<ImageLink> retval = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(images)) {
+            retval = new ArrayList<>(images);
+            retval.sort(Comparator.comparing(ImageLink::getDisplayOrder));
+        }
+        return retval;
     }
 
     public void clearImages() {

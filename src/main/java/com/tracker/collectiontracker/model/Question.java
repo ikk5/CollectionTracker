@@ -59,6 +59,9 @@ public class Question {
     @Column(nullable = false, name = "list_column")
     private Boolean listColumn = false;
 
+    @Column(nullable = false, name = "display_order")
+    private int displayOrder;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

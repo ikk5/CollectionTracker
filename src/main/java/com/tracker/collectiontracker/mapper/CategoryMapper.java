@@ -37,7 +37,7 @@ public class CategoryMapper {
         if (to.getSubcategories() != null) {
             to.getSubcategories().stream().filter(s -> StringUtils.isNotBlank(s.getSubcategory()))
                     .forEach(subcategoryTO ->
-                            category.addSubcategory(subcategoryTO.getSubcategoryId(), subcategoryTO.getSubcategory()));
+                            category.addSubcategory(subcategoryTO.getSubcategoryId(), subcategoryTO.getSubcategory(), subcategoryTO.getDisplayOrder()));
         }
 
         if (to.getQuestions() != null) {

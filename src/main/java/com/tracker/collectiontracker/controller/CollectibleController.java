@@ -148,7 +148,7 @@ public class CollectibleController extends AbstractController {
                         QuestionMapper.mapTOtoEntityWithId(triple.getQuestion())));
 
                 dbCollectible.clearImages();
-                collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl()));
+                collectibleTO.getImages().forEach(img -> dbCollectible.addImage(img.getUrl(), img.getDisplayOrder()));
 
                 if (isValidCollectible(dbCollectible)) {
                     collectibleRepository.save(dbCollectible);

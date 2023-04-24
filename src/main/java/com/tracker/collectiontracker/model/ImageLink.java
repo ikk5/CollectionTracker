@@ -32,12 +32,16 @@ public class ImageLink {
     @Column(nullable = false)
     private String url;
 
+    @Column(nullable = false, name = "display_order")
+    private int displayOrder;
+
     @JoinColumn(name = "collectible_id", nullable = false)
     @ManyToOne
     private Collectible collectible;
 
-    public ImageLink(String url, Collectible collectible) {
+    public ImageLink(String url, int displayOrder, Collectible collectible) {
         this.url = url;
+        this.displayOrder = displayOrder;
         this.collectible = collectible;
     }
 }
