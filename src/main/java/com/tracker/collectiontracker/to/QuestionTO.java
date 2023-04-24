@@ -24,5 +24,7 @@ public class QuestionTO {
 
     private Boolean listColumn;
 
+    private Boolean filterColumn;
+
     private int displayOrder;
 }

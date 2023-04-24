@@ -59,6 +59,12 @@ public class Question {
     @Column(nullable = false, name = "list_column")
     private Boolean listColumn = false;
 
+    /**
+     * True if the column is filterable on the list view.
+     */
+    @Column(nullable = false, name = "filter_column")
+    private Boolean filterColumn = false;
+
     @Column(nullable = false, name = "display_order")
     private int displayOrder;
 
