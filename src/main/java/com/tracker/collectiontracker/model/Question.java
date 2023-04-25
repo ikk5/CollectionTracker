@@ -68,6 +68,12 @@ public class Question {
     @Column(nullable = false, name = "display_order")
     private int displayOrder;
 
+    /**
+     * In case of datatype 'Dropdown' this will contain the options, separated by ;
+     */
+    @Column(name = "dropdown_options")
+    private String dropdownOptions;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

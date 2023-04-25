@@ -30,6 +30,7 @@ public class QuestionMapper {
                 .listColumn(BooleanUtils.isTrue(question.getListColumn()))
                 .filterColumn(BooleanUtils.isTrue(question.getFilterColumn()))
                 .displayOrder(question.getDisplayOrder())
+                .dropdownOptions(question.getDropdownOptions())
                 .build();
     }
 
@@ -42,6 +43,7 @@ public class QuestionMapper {
                 .listColumn(BooleanUtils.isTrue(questionTO.getListColumn()))
                 .filterColumn(BooleanUtils.isTrue(questionTO.getFilterColumn()))
                 .displayOrder(questionTO.getDisplayOrder())
+                .dropdownOptions(questionTO.getDropdownOptions())
                 .build();
     }
 

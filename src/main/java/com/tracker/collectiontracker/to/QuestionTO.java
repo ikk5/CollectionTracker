@@ -27,4 +27,6 @@ public class QuestionTO {
     private Boolean filterColumn;
 
     private int displayOrder;
+
+    private String dropdownOptions;
 }

@@ -198,6 +198,7 @@ public class CategoryController extends AbstractController {
                     dbQuestion.setListColumn(BooleanUtils.isTrue(questionTO.getListColumn()));
                     dbQuestion.setFilterColumn(BooleanUtils.isTrue(questionTO.getFilterColumn()));
                     dbQuestion.setDisplayOrder(questionTO.getDisplayOrder());
+                    dbQuestion.setDropdownOptions(questionTO.getDropdownOptions());
                     unusedQuestions.remove(dbQuestion);
                 }
             }
