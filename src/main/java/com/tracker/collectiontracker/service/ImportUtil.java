@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -48,35 +49,31 @@ public class ImportUtil {
         return EXCEL_TYPE.equals(file.getContentType());
     }
 
-    public Category extractCategoryFromExcel(MultipartFile file) {
+    public Category extractCategoryFromExcel(MultipartFile file) throws Exception {
         category.setName(FilenameUtils.removeExtension(file.getOriginalFilename()));
-        try {
-            Workbook workbook = new XSSFWorkbook(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> rows = sheet.iterator();
+        Workbook workbook = new XSSFWorkbook(file.getInputStream());
+        Sheet sheet = workbook.getSheetAt(0);
+        Iterator<Row> rows = sheet.iterator();
 
-            int rowNumber = 0;
-            while (rows.hasNext()) {
-                Row currentRow = rows.next();
+        int rowNumber = 0;
+        while (rows.hasNext()) {
+            Row currentRow = rows.next();
 
-                // header row
-                if (rowNumber == 0) {
-                    readHeaderRow(currentRow);
-                    if (nameColumnIndex == null || subcatColumnIndex == null) {
-                        // No column found for the name or subcategory, can't process this. 
-                        return null;
-                    }
-                    rowNumber++;
-                } else {
-                    extractCollectible(currentRow);
+            // header row
+            if (rowNumber == 0) {
+                readHeaderRow(currentRow);
+                if (nameColumnIndex == null || subcatColumnIndex == null) {
+                    // No column found for the name or subcategory, can't process this. 
+                    return null;
                 }
+                rowNumber++;
+            } else {
+                extractCollectible(currentRow);
             }
-
-            workbook.close();
-
-        } catch (Exception e) {
-            log.error("Fail to parse Excel file: {}", e.getMessage(), e);
         }
+
+        workbook.close();
+
         return category;
     }
 
@@ -86,7 +83,7 @@ public class ImportUtil {
         int cellIndex = 0;
         while (cellsInRow.hasNext()) {
             Cell currentCell = cellsInRow.next();
-            String value = currentCell.getStringCellValue();
+            String value = getCellValue(currentCell);
 
             if (StringUtils.equalsIgnoreCase(value, "Name")) {
                 nameColumnIndex = cellIndex;
@@ -115,7 +112,7 @@ public class ImportUtil {
 
         while (cellsInRow.hasNext()) {
             Cell currentCell = cellsInRow.next();
-            String value = currentCell.getStringCellValue();
+            String value = getCellValue(currentCell);
             int columnIndex = currentCell.getColumnIndex();
 
             if (columnIndex == nameColumnIndex) {
@@ -146,6 +143,12 @@ public class ImportUtil {
             subcategoryMap.put(value, subcategory);
         }
         return subcategory;
+    }
+
+    private String getCellValue(Cell cell) {
+        // This gets the cellvalue as string no matter the celltype.
+        DataFormatter formatter = new DataFormatter();
+        return formatter.formatCellValue(cell);
     }
 }
 

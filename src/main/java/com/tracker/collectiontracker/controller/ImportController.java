@@ -38,13 +38,19 @@ public class ImportController extends AbstractController {
         ImportUtil importUtil = new ImportUtil();
 
         if (importUtil.hasExcelFormat(file)) {
-            Category category = importUtil.extractCategoryFromExcel(file);
-            if (category != null) {
-                findLoggedInUser().addCategory(category);
-                Category savedCategory = categoryRepository.save(category);
-                return new ResponseEntity<>(new MessageResponse(filename + " imported", savedCategory.getId()), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(new MessageResponse("No category made, excel might be empty."), HttpStatus.OK);
+            try {
+                Category category = importUtil.extractCategoryFromExcel(file);
+
+                if (category != null) {
+                    findLoggedInUser().addCategory(category);
+                    Category savedCategory = categoryRepository.save(category);
+                    return new ResponseEntity<>(new MessageResponse(filename + " imported", savedCategory.getId()), HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(new MessageResponse("No category made, excel might be empty."), HttpStatus.OK);
+                }
+            } catch (Exception e) {
+                log.error("Fail to parse Excel file: {}", e.getMessage(), e);
+                return new ResponseEntity<>(new MessageResponse("Fail to parse Excel file: " + e.getMessage()), HttpStatus.BAD_REQUEST);
             }
         } else {
             return new ResponseEntity<>(new MessageResponse("Incorrect format"), HttpStatus.BAD_REQUEST);
