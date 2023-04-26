@@ -74,6 +74,11 @@ public class Category {
         subcategories.add(Subcategory.builder().name(subcategoryName).displayOrder(displayOrder).category(this).build());
     }
 
+    public void addSubcategory(Subcategory subcategory) {
+        subcategory.setCategory(this);
+        subcategories.add(subcategory);
+    }
+
     public void deleteSubcategory(Subcategory subcategory) {
         subcategories.remove(subcategory);
         subcategory.setCategory(null);

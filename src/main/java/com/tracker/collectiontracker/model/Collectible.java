@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
@@ -84,7 +83,7 @@ public class Collectible {
     public void addOrUpdateTriple(String value, Question question) {
         Triplestore existing = null;
         for (Triplestore existingTriple : triples) {
-            if (Objects.equals(existingTriple.getQuestion().getId(), question.getId())) {
+            if (StringUtils.equals(existingTriple.getQuestion().getName(), question.getName())) {
                 existing = existingTriple;
                 break;
             }
