@@ -168,7 +168,7 @@ public class CategoryController extends AbstractController {
         if (!unusedSubcategories.isEmpty()) {
             // These subcategories are deleted, only delete if it's not used for a collectible.
             for (Subcategory unused : unusedSubcategories) {
-                if (collectibleRepository.findBySubcategory(unused).isEmpty()) {
+                if (collectibleRepository.existsBySubcategory(unused)) {
                     dbCategory.deleteSubcategory(unused);
                     subcategoryRepository.delete(unused);
                 }
