@@ -182,10 +182,10 @@ public class CategoryController extends AbstractController {
 
         for (QuestionTO questionTO : categoryTO.getQuestions()) {
             if (questionTO.getId() == null) {
-                // Subcategory is new, add to Category
+                // Question is new, add to Category
                 dbCategory.addQuestion(QuestionMapper.mapTOtoEntity(questionTO));
             } else {
-                // Subcategory may be renamed, copy name just in case.
+                // Question may be renamed, copy name just in case.
                 Question dbQuestion =
                         dbCategory.getQuestions().stream().filter(question ->
                                         Objects.equals(question.getId(), questionTO.getId()))

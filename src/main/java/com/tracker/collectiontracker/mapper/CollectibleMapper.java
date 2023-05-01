@@ -3,6 +3,8 @@ package com.tracker.collectiontracker.mapper;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
+
 import com.tracker.collectiontracker.model.Collectible;
 import com.tracker.collectiontracker.model.Question;
 import com.tracker.collectiontracker.model.Subcategory;
@@ -11,10 +13,15 @@ import com.tracker.collectiontracker.to.CollectibleSummaryTO;
 import com.tracker.collectiontracker.to.CollectibleTO;
 import com.tracker.collectiontracker.to.CollectiblesListTO;
 import com.tracker.collectiontracker.to.ImageLinkTO;
+import com.tracker.collectiontracker.to.QuestionTO;
+import com.tracker.collectiontracker.util.TimingUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  */
+@Slf4j
 public class CollectibleMapper {
 
     private CollectibleMapper() {
@@ -48,9 +55,16 @@ public class CollectibleMapper {
     }
 
     public static CollectiblesListTO mapEntitiesToCollectibleListTO(List<Collectible> collectibles, List<Question> questions) {
+        long start = TimingUtil.start();
+        List<QuestionTO> questionTOlist = QuestionMapper.mapEntityListToTOs(questions);
+        log.info("Mapped {} questions in {}ms", questionTOlist.size(), TimingUtil.duration(start));
+        start = TimingUtil.start();
+        List<CollectibleSummaryTO> collectibleSummaries = collectibles.stream().map(CollectibleMapper::mapEntityToSummaryTO).toList();
+        log.info("Mapped {} collectibles in {}ms", collectibleSummaries.size(), TimingUtil.duration(start));
+
         return CollectiblesListTO.builder()
-                .questions(QuestionMapper.mapEntityListToTOs(questions))
-                .collectibleSummaries(collectibles.stream().map(CollectibleMapper::mapEntityToSummaryTO).toList())
+                .questions(questionTOlist)
+                .collectibleSummaries(collectibleSummaries)
                 .build();
     }
 
@@ -62,7 +76,9 @@ public class CollectibleMapper {
                 .addedDate(collectible.getAddedDate())
                 .build();
         for (Triplestore triple : collectible.getTriples()) {
-            summaryTO.addQuestionAnswer(triple.getQuestion().getName(), triple.getValue());
+            if (BooleanUtils.isTrue(triple.getQuestion().getListColumn())) {
+                summaryTO.addQuestionAnswer(triple.getQuestion().getName(), triple.getValue());
+            }
         }
         return summaryTO;
     }

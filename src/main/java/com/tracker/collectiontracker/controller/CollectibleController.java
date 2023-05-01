@@ -35,6 +35,7 @@ import com.tracker.collectiontracker.repository.SubcategoryRepository;
 import com.tracker.collectiontracker.to.CollectibleTO;
 import com.tracker.collectiontracker.to.CollectiblesListTO;
 import com.tracker.collectiontracker.to.response.MessageResponse;
+import com.tracker.collectiontracker.util.TimingUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +77,7 @@ public class CollectibleController extends AbstractController {
     @GetMapping(value = "/collectibles/list", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CollectiblesListTO> getCollectiblesListForSubcategories(@RequestHeader String subcategoryIds) {
         try {
+            long start = TimingUtil.start();
             log.info("getCollectibleListForSubcategories called with subcategoryIds: {}", subcategoryIds);
             List<Collectible> collectibles = new ArrayList<>();
             List<Question> questions = new ArrayList<>();
@@ -85,14 +87,18 @@ public class CollectibleController extends AbstractController {
                 log.info("subcategories found: {}", subcategories);
                 if (!subcategories.isEmpty()) {
                     questions = subcategories.get(0).getCategory().getQuestions();
+                    questions.removeIf(question -> !question.getListColumn());
                     collectibles = new ArrayList<>(collectibleRepository.findCollectiblesBySubcategoryIn(subcategories));
                 }
             }
-
+            log.info("Retrieved {} collectibles from db in {}ms", collectibles.size(), TimingUtil.duration(start));
+            start = TimingUtil.start();
             if (collectibles.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(CollectibleMapper.mapEntitiesToCollectibleListTO(collectibles, questions), HttpStatus.OK);
+            CollectiblesListTO to = CollectibleMapper.mapEntitiesToCollectibleListTO(collectibles, questions);
+            log.info("Mapped collectiblesListTO with {} collectiblesummaries in {}ms", to.getCollectibleSummaries().size(), TimingUtil.duration(start));
+            return new ResponseEntity<>(to, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

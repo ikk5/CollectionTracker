@@ -1,4 +1,4 @@
-package com.tracker.collectiontracker.service;
+package com.tracker.collectiontracker.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
