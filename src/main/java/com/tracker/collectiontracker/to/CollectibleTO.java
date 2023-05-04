@@ -1,6 +1,5 @@
 package com.tracker.collectiontracker.to;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Builder;
@@ -26,5 +25,5 @@ public class CollectibleTO {
 
     private List<TriplestoreTO> triples;
 
-    private LocalDate addedDate;
+    private String addedDate;
 }

@@ -1,5 +1,6 @@
 package com.tracker.collectiontracker.mapper;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class CollectibleMapper {
                         collectible.getImages().stream().map(imageLink -> new ImageLinkTO(imageLink.getUrl(), imageLink.getDisplayOrder())).toList())
                 .triples(TriplestoreMapper.mapEntityListToTOs(collectible.getTriples()))
                 .name(collectible.getName())
-                .addedDate(collectible.getAddedDate())
+                .addedDate(collectible.getAddedDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")))
                 .build();
     }
 
