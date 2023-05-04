@@ -119,6 +119,9 @@ public class CollectibleController extends AbstractController {
     public ResponseEntity<MessageResponse> createCollectible(@RequestBody CollectibleTO collectibleTO) {
         try {
             Subcategory subcategory = subcategoryRepository.findById(collectibleTO.getSubcategory().getSubcategoryId()).orElse(null);
+            // Remove empty triples.
+            collectibleTO.getTriples().removeIf(triplestoreTO -> StringUtils.isBlank(triplestoreTO.getValue()));
+            
             Collectible collectible = CollectibleMapper.mapTOtoEntity(collectibleTO, subcategory);
             if (isValidCollectible(collectible)) {
                 Collectible savedCollectible = collectibleRepository.save(collectible);

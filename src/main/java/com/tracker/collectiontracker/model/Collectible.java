@@ -88,11 +88,11 @@ public class Collectible {
                 break;
             }
         }
-        if (existing == null) {
+        if (existing != null) {
+            existing.setValue(value);
+        } else if (StringUtils.isNotBlank(value)) {
             Triplestore triple = Triplestore.builder().value(value).question(question).collectible(this).build();
             triples.add(triple);
-        } else {
-            existing.setValue(value);
         }
     }
 
