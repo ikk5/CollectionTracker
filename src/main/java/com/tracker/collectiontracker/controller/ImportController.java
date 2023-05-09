@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-@CrossOrigin(origins = ORIGINS, maxAge = 3600, allowCredentials = "true")
+@CrossOrigin(origins = ORIGINS, maxAge = 36000, allowCredentials = "true") // TODO: lower maxAge after db upgrade
 @RestController
 @RequestMapping("/api")
 public class ImportController extends AbstractController {

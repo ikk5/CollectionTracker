@@ -70,6 +70,7 @@ public class WebSecurityConfig {
                         authorize.requestMatchers("/api/auth/*").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/export").authenticated()
                                 .anyRequest().authenticated()
                 );
 

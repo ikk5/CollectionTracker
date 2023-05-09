@@ -6,6 +6,7 @@ mvnw.cmd
 !**/src/main/**/target/
 !**/src/test/**/target/
 application-prod.properties
+application-test.properties
 
 ### STS ###
 .apt_generated
